@@ -58,21 +58,14 @@ A lightweight, modern admin UI to operate **Matrix-Hub** and **MCP Gateway** fro
 
 > Requires Node.js 18+ and npm.
 
-### 1) Scaffold & enhance (scripts)
-
-If you’re using the provided scripts:
-
+### 1 ) Clone the reepo
 ```bash
-# 1) Create the project (interactive refine scaffold + core wiring)
-bash ./1-core.sh --install --init-git
-
-# 2) Add Matrix-Hub features (Search, Entities, enhanced Remotes)
-cd matrix-hub-admin
-bash ../2-addon.sh
+git clone https://github.com/agent-matrix/matrix-hub-admin
 ```
 
-> You can re-run `2-addon.sh` safely; it only overwrites files it owns.
-
+```bash
+cd matrix-hub-admin
+```
 ### 2) Configure environment
 
 Copy the template and edit values:
