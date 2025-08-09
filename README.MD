@@ -264,11 +264,7 @@ docker run --rm -d -p 8080:3000 --name matrix-hub-admin --env-file .env.local ma
 * Health results expose status via `aria-live="polite"`.
 * Buttons/controls include descriptive labels.
 
----
 
-## 📄 License
-
-No license specified. Add your preferred license file (e.g., MIT) if you plan to distribute.
 
 ---
 
