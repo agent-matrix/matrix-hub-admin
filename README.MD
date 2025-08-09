@@ -1,8 +1,7 @@
 # Matrix-Hub Admin (Next.js + MUI + NextAuth)
 ![](assets/2025-08-09-23-04-18.png)
 
-A lightweight, modern admin UI to operate **Matrix-Hub** and **MCP Gateway** from your browser.
-Scaffolded on the Refine Next.js template, but implemented with **custom Next.js Pages**, **MUI** for UI, **NextAuth** for authentication, and **axios** clients for Hub/Gateway APIs.
+A lightweight, modern admin UI to operate **Matrix-Hub** and **MCP Gateway** from your browser implemented with **custom Next.js Pages**, **MUI** for UI, **NextAuth** for authentication, and **axios** clients for Hub/Gateway APIs.
 
 ---
 
