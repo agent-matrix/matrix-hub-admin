@@ -1,9 +1,113 @@
-import React from 'react';
-import { Plus, Settings, Network } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, Settings, Network, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { Button, Card, Badge } from '../ui';
 import { MOCK_GATEWAY } from '@/lib/mockData';
 
+interface MCPRegistrationForm {
+  transport: 'SSE' | 'STDIO' | 'WEBSOCKET' | 'HTTP';
+  url: string;
+  id: string;
+  name: string;
+  version: string;
+  description: string;
+  capabilities: string;
+}
+
+const initialFormState: MCPRegistrationForm = {
+  transport: 'SSE',
+  url: '',
+  id: '',
+  name: '',
+  version: '0.1.0',
+  description: '',
+  capabilities: '',
+};
+
 export const GatewayView: React.FC = () => {
+  const [formData, setFormData] = useState<MCPRegistrationForm>(initialFormState);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [registeredServers, setRegisteredServers] = useState(MOCK_GATEWAY);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setMessage(null);
+
+    try {
+      // Validate required fields
+      if (!formData.id || !formData.name || !formData.url) {
+        throw new Error('Please fill in all required fields (ID, Name, URL)');
+      }
+
+      // Build the registration payload
+      const payload = {
+        endpoint: {
+          transport: formData.transport,
+          url: formData.url,
+        },
+        id: formData.id,
+        name: formData.name,
+        version: formData.version,
+        description: formData.description,
+        capabilities: formData.capabilities
+          .split(',')
+          .map((c) => c.trim())
+          .filter((c) => c.length > 0),
+      };
+
+      // Get API URL from environment
+      const apiUrl = process.env.NEXT_PUBLIC_HUB_URL || 'http://localhost:8000';
+
+      // Call the Matrix Hub API
+      const response = await fetch(`${apiUrl}/registry/mcp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Registration failed' }));
+        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      // Success! Add to the list of registered servers
+      const newServer = {
+        id: result.uid || formData.id,
+        name: formData.name,
+        transport: formData.transport,
+        url: formData.url,
+        status: 'ACTIVE' as const,
+      };
+
+      setRegisteredServers((prev) => [newServer, ...prev]);
+
+      setMessage({
+        type: 'success',
+        text: `Successfully registered ${formData.name}! UID: ${result.uid}`,
+      });
+
+      // Reset form
+      setFormData(initialFormState);
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Failed to register MCP server',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 space-y-6">
@@ -16,13 +120,17 @@ export const GatewayView: React.FC = () => {
               Active MCP server bridges and connection pools.
             </p>
           </div>
-          <Button variant="primary" icon={Plus}>
+          <Button
+            variant="primary"
+            icon={Plus}
+            onClick={() => document.getElementById('registration-form')?.scrollIntoView({ behavior: 'smooth' })}
+          >
             Register Server
           </Button>
         </div>
 
         <div className="grid gap-4">
-          {MOCK_GATEWAY.map((gw) => (
+          {registeredServers.map((gw) => (
             <div
               key={gw.id}
               className="bg-zinc-900 border border-white/5 rounded-xl p-4 flex items-center justify-between hover:border-blue-500/20 transition-all"
@@ -74,48 +182,161 @@ export const GatewayView: React.FC = () => {
       </div>
 
       <div className="space-y-6">
-        <Card title="Register New Server">
-          <form
-            className="space-y-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              alert('Server registration functionality coming soon!');
-            }}
-          >
+        <div id="registration-form">
+          <Card title="Register New MCP Server">
+            <form className="space-y-4" onSubmit={handleSubmit}>
+            {/* Success/Error Message */}
+            {message && (
+              <div
+                className={`flex items-start gap-2 p-3 rounded-lg border ${
+                  message.type === 'success'
+                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                    : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                }`}
+              >
+                {message.type === 'success' ? (
+                  <CheckCircle size={16} className="mt-0.5 flex-shrink-0" />
+                ) : (
+                  <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
+                )}
+                <span className="text-xs">{message.text}</span>
+              </div>
+            )}
+
+            {/* Transport Type */}
             <div>
               <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
-                Server Name
+                Transport Type *
               </label>
-              <input
-                type="text"
+              <select
+                name="transport"
+                value={formData.transport}
+                onChange={handleInputChange}
                 className="w-full bg-black border border-white/10 rounded-lg p-2 text-sm text-white focus:border-blue-500/50 outline-none"
-                placeholder="e.g. weather-service"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
-                Transport
-              </label>
-              <select className="w-full bg-black border border-white/10 rounded-lg p-2 text-sm text-white focus:border-blue-500/50 outline-none">
-                <option>SSE (Server-Sent Events)</option>
-                <option>Stdio (Local Process)</option>
+                required
+              >
+                <option value="SSE">SSE (Server-Sent Events)</option>
+                <option value="STDIO">STDIO (Local Process)</option>
+                <option value="WEBSOCKET">WebSocket</option>
+                <option value="HTTP">HTTP</option>
               </select>
             </div>
+
+            {/* Endpoint URL */}
             <div>
               <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
-                Endpoint URL / Command
+                Endpoint URL *
               </label>
               <input
                 type="text"
+                name="url"
+                value={formData.url}
+                onChange={handleInputChange}
+                className="w-full bg-black border border-white/10 rounded-lg p-2 text-sm text-white focus:border-blue-500/50 outline-none font-mono"
+                placeholder="http://10.0.0.12:8080"
+                required
+              />
+              <p className="text-xs text-zinc-600 mt-1">
+                Full URL for network transports (SSE, HTTP, WebSocket)
+              </p>
+            </div>
+
+            {/* Server ID */}
+            <div>
+              <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
+                Server ID *
+              </label>
+              <input
+                type="text"
+                name="id"
+                value={formData.id}
+                onChange={handleInputChange}
+                className="w-full bg-black border border-white/10 rounded-lg p-2 text-sm text-white focus:border-blue-500/50 outline-none font-mono"
+                placeholder="hello-sse-server"
+                required
+              />
+              <p className="text-xs text-zinc-600 mt-1">
+                Unique identifier (lowercase, hyphens allowed)
+              </p>
+            </div>
+
+            {/* Server Name */}
+            <div>
+              <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
+                Server Name *
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
                 className="w-full bg-black border border-white/10 rounded-lg p-2 text-sm text-white focus:border-blue-500/50 outline-none"
-                placeholder="http://localhost..."
+                placeholder="Hello SSE Server"
+                required
               />
             </div>
-            <Button variant="primary" className="w-full justify-center mt-2" type="submit">
-              Create Connection
+
+            {/* Version */}
+            <div>
+              <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
+                Version
+              </label>
+              <input
+                type="text"
+                name="version"
+                value={formData.version}
+                onChange={handleInputChange}
+                className="w-full bg-black border border-white/10 rounded-lg p-2 text-sm text-white focus:border-blue-500/50 outline-none font-mono"
+                placeholder="0.1.0"
+              />
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
+                Description
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                className="w-full bg-black border border-white/10 rounded-lg p-2 text-sm text-white focus:border-blue-500/50 outline-none resize-none"
+                placeholder="Describe your MCP server..."
+                rows={3}
+              />
+            </div>
+
+            {/* Capabilities */}
+            <div>
+              <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
+                Capabilities
+              </label>
+              <input
+                type="text"
+                name="capabilities"
+                value={formData.capabilities}
+                onChange={handleInputChange}
+                className="w-full bg-black border border-white/10 rounded-lg p-2 text-sm text-white focus:border-blue-500/50 outline-none"
+                placeholder="search, files, database"
+              />
+              <p className="text-xs text-zinc-600 mt-1">
+                Comma-separated list of capabilities
+              </p>
+            </div>
+
+            {/* Submit Button */}
+            <Button
+              variant="primary"
+              className="w-full justify-center mt-2"
+              type="submit"
+              disabled={isSubmitting}
+              icon={isSubmitting ? Loader2 : undefined}
+            >
+              {isSubmitting ? 'Registering...' : 'Register MCP Server'}
             </Button>
-          </form>
-        </Card>
+            </form>
+          </Card>
+        </div>
 
         <Card
           title="Traffic Stats"

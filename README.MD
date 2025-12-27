@@ -44,10 +44,11 @@ Matrix Hub Admin is a **completely refactored**, modern web interface built with
 
 #### ⚡ **Gateway Control**
 - Active MCP server bridge management
-- Register new servers (SSE/STDIO)
+- Register new servers (SSE/STDIO/WebSocket/HTTP)
 - Real-time connection monitoring
 - Traffic statistics dashboard
 - Transport configuration
+- MCP server metadata management
 
 </td>
 <td width="50%">
@@ -197,8 +198,13 @@ The application works out-of-the-box with mock data. For production use with rea
 Create a `.env.local` file:
 
 ```env
-# Matrix Hub API (optional)
-NEXT_PUBLIC_HUB_URL=https://your-hub-api.com
+# Authentication Credentials
+NEXT_PUBLIC_ADMIN_USERNAME=admin
+NEXT_PUBLIC_ADMIN_PASSWORD=admin
+NEXT_PUBLIC_ADMIN_EMAIL=admin@matrixhub.io
+
+# Matrix Hub API (required for MCP server registration)
+NEXT_PUBLIC_HUB_URL=http://localhost:8000
 NEXT_PUBLIC_HUB_TOKEN=your_token_here
 
 # MCP Gateway API (optional)
@@ -206,7 +212,7 @@ NEXT_PUBLIC_GW_URL=https://your-gateway-api.com
 NEXT_PUBLIC_GW_TOKEN=your_token_here
 ```
 
-> **Note**: The current version uses mock data for demonstration. API integration is optional.
+> **Note**: The admin interface includes authentication by default. MCP server registration requires a running Matrix Hub backend at `NEXT_PUBLIC_HUB_URL`.
 
 ---
 
@@ -300,16 +306,54 @@ The application features 6 main sections accessible from the top navigation bar:
 5. Monitor sync status in the table
 ```
 
-#### ⚡ Registering Gateway Servers
+#### ⚡ Registering MCP Servers
+
+The Gateway tab includes a comprehensive MCP server registration form that integrates with the Matrix Hub backend.
 
 ```
 1. Navigate to "Gateway" tab
-2. Fill in the registration form:
-   - Server Name
-   - Transport Type (SSE/STDIO)
-   - Endpoint URL
-3. Click "Create Connection"
-4. Server appears in active routes list
+2. Scroll to "Register New MCP Server" form (or click "Register Server" button)
+3. Fill in the registration form:
+   Required Fields:
+   - Transport Type: SSE, STDIO, WebSocket, or HTTP
+   - Endpoint URL: Full URL for network transports (e.g., http://10.0.0.12:8080)
+   - Server ID: Unique identifier (lowercase, hyphens allowed)
+   - Server Name: Human-readable name
+
+   Optional Fields:
+   - Version: Server version (default: 0.1.0)
+   - Description: Brief description of server capabilities
+   - Capabilities: Comma-separated list (e.g., "search, files, database")
+
+4. Click "Register MCP Server"
+5. Success message shows the assigned UID
+6. Server appears in active routes list
+7. Use the UID to install the server via POST /catalog/install
+```
+
+**Backend API Endpoint**: `POST {NEXT_PUBLIC_HUB_URL}/registry/mcp`
+
+**Example Payload**:
+```json
+{
+  "endpoint": {
+    "transport": "SSE",
+    "url": "http://10.0.0.12:8080"
+  },
+  "id": "hello-sse-server",
+  "name": "Hello SSE Server",
+  "version": "0.1.0",
+  "description": "My MCP server",
+  "capabilities": ["search", "files"]
+}
+```
+
+**Response**:
+```json
+{
+  "uid": "mcp_server:hello-sse-server@0.1.0",
+  "manifest_blob_ref": "blob://sha256:abc123..."
+}
 ```
 
 ---
