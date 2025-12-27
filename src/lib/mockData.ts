@@ -18,7 +18,7 @@ export interface Entity {
 export interface Gateway {
   id: string;
   name: string;
-  transport: 'SSE' | 'STDIO';
+  transport: 'SSE' | 'STDIO' | 'WEBSOCKET' | 'HTTP';
   url: string;
   status: 'ACTIVE' | 'INACTIVE';
 }
