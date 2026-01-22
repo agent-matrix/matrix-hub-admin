@@ -1,9 +1,69 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { RefreshCw, Plus, Trash2 } from 'lucide-react';
 import { Button, Card, Badge } from '../ui';
-import { MOCK_REMOTES } from '@/lib/mockData';
+
+interface Remote {
+  id?: string;
+  name?: string;
+  url: string;
+  status?: string;
+  last_sync?: string;
+  items?: number;
+}
 
 export const RemotesView: React.FC = () => {
+  const [remotes, setRemotes] = useState<Remote[]>([]);
+  const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      setErr(null);
+      const r = await fetch('/api/hub/remotes');
+      const t = await r.text();
+      if (!r.ok) throw new Error(t);
+      const j = JSON.parse(t);
+      setRemotes(j?.items || j?.remotes || []);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      setErr(message);
+      setRemotes([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const sync = async () => {
+    setSyncing(true);
+    try {
+      const r = await fetch('/api/hub/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+      });
+      if (!r.ok) throw new Error(await r.text());
+      await load();
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      setErr(message);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const getStatusBadge = (status?: string) => {
+    const s = status?.toUpperCase();
+    if (s === 'SYNCED') return <Badge color="emerald">SYNCED</Badge>;
+    if (s === 'SYNCING') return <Badge color="blue">SYNCING</Badge>;
+    if (s === 'ERROR') return <Badge color="rose">ERROR</Badge>;
+    return <Badge color="zinc">{s || 'UNKNOWN'}</Badge>;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-end">
@@ -14,8 +74,13 @@ export const RemotesView: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-3">
-          <Button variant="secondary" icon={RefreshCw}>
-            Sync All
+          <Button
+            variant="secondary"
+            icon={RefreshCw}
+            onClick={sync}
+            disabled={syncing}
+          >
+            {syncing ? 'Syncing...' : 'Sync All'}
           </Button>
           <Button variant="primary" icon={Plus}>
             Add Remote
@@ -23,11 +88,14 @@ export const RemotesView: React.FC = () => {
         </div>
       </div>
 
+      {err && <div className="text-rose-400 text-sm">Remotes error: {err}</div>}
+
       <Card className="p-0 overflow-hidden">
         <table className="w-full text-left">
           <thead>
             <tr className="bg-white/[0.02] border-b border-white/5 text-xs text-zinc-500 uppercase">
               <th className="p-4 font-bold">Status</th>
+              <th className="p-4 font-bold">Name</th>
               <th className="p-4 font-bold">Remote URL</th>
               <th className="p-4 font-bold">Items</th>
               <th className="p-4 font-bold">Last Sync</th>
@@ -35,32 +103,37 @@ export const RemotesView: React.FC = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5 text-sm">
-            {MOCK_REMOTES.map((remote) => (
-              <tr
-                key={remote.id}
-                className="hover:bg-white/[0.02] transition-colors"
-              >
-                <td className="p-4">
-                  {remote.status === 'SYNCED' && (
-                    <Badge color="emerald">SYNCED</Badge>
-                  )}
-                  {remote.status === 'SYNCING' && (
-                    <Badge color="blue">SYNCING</Badge>
-                  )}
-                  {remote.status === 'ERROR' && (
-                    <Badge color="rose">ERROR</Badge>
-                  )}
-                </td>
-                <td className="p-4 font-mono text-zinc-300">{remote.url}</td>
-                <td className="p-4 text-white font-medium">{remote.items}</td>
-                <td className="p-4 text-zinc-500">{remote.last_sync}</td>
-                <td className="p-4 text-right">
-                  <button className="text-zinc-500 hover:text-rose-400 transition-colors p-2">
-                    <Trash2 size={16} />
-                  </button>
+            {loading ? (
+              <tr>
+                <td colSpan={6} className="p-4 text-center text-zinc-500">
+                  Loading remotes...
                 </td>
               </tr>
-            ))}
+            ) : remotes.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="p-4 text-center text-zinc-500">
+                  No remotes configured.
+                </td>
+              </tr>
+            ) : (
+              remotes.map((remote, idx) => (
+                <tr
+                  key={remote.id || remote.url || idx}
+                  className="hover:bg-white/[0.02] transition-colors"
+                >
+                  <td className="p-4">{getStatusBadge(remote.status)}</td>
+                  <td className="p-4 font-medium text-zinc-300">{remote.name || '-'}</td>
+                  <td className="p-4 font-mono text-zinc-300">{remote.url}</td>
+                  <td className="p-4 text-white font-medium">{remote.items ?? '-'}</td>
+                  <td className="p-4 text-zinc-500">{remote.last_sync || '-'}</td>
+                  <td className="p-4 text-right">
+                    <button className="text-zinc-500 hover:text-rose-400 transition-colors p-2">
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </Card>
