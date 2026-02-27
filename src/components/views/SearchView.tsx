@@ -7,6 +7,7 @@ interface Entity {
   name: string;
   version: string;
   type: string;
+  summary?: string;
   capability?: string;
   downloads?: string;
 }
@@ -21,9 +22,10 @@ export const SearchView: React.FC = () => {
     setLoading(true);
     try {
       setErr(null);
+      // Hub search requires `q` param; when empty, use the catalog list endpoint instead
       const url = searchQuery.trim()
         ? `/api/hub/search?q=${encodeURIComponent(searchQuery.trim())}&limit=30`
-        : `/api/hub/search?limit=30`;
+        : `/api/hub/catalog?limit=30`;
       const r = await fetch(url);
       const t = await r.text();
       if (!r.ok) throw new Error(t);
@@ -110,8 +112,7 @@ export const SearchView: React.FC = () => {
               {entity.name}
             </h3>
             <p className="text-sm text-zinc-500 mb-4 line-clamp-2">
-              High-performance connector for {entity.capability || 'general'} operations with
-              built-in safety checks.
+              {entity.summary || `High-performance connector for ${entity.capability || 'general'} operations.`}
             </p>
 
             <div className="flex items-center justify-between pt-4 border-t border-white/5">

@@ -61,11 +61,8 @@ export const GatewayView: React.FC = () => {
           .filter((c) => c.length > 0),
       };
 
-      // Get API URL from environment
-      const apiUrl = process.env.NEXT_PUBLIC_HUB_URL || 'http://localhost:8000';
-
-      // Call the Matrix Hub API
-      const response = await fetch(`${apiUrl}/registry/mcp`, {
+      // Call through the admin API proxy (adds server-side auth token)
+      const response = await fetch('/api/hub/registry', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
