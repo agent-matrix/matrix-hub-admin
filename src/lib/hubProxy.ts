@@ -1,7 +1,7 @@
 import type { NextApiRequest } from "next";
 
 export function hubBaseUrl(): string {
-  return (process.env.HUB_URL || "http://127.0.0.1:8080").replace(/\/+$/, "");
+  return (process.env.HUB_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
 }
 
 export function hubToken(): string {

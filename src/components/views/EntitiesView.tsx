@@ -7,6 +7,7 @@ interface Entity {
   name: string;
   type: string;
   version: string;
+  summary?: string;
   capability?: string;
 }
 
@@ -19,7 +20,7 @@ export const EntitiesView: React.FC = () => {
     setLoading(true);
     try {
       setErr(null);
-      const r = await fetch('/api/hub/search?limit=100');
+      const r = await fetch('/api/hub/catalog?limit=100');
       const t = await r.text();
       if (!r.ok) throw new Error(t);
       const j = JSON.parse(t);
