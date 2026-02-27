@@ -1,10 +1,49 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Search, Download, Box } from 'lucide-react';
 import { Button, Badge } from '../ui';
-import { MOCK_ENTITIES } from '@/lib/mockData';
+
+interface Entity {
+  id: string;
+  name: string;
+  version: string;
+  type: string;
+  capability?: string;
+  downloads?: string;
+}
 
 export const SearchView: React.FC = () => {
   const [query, setQuery] = useState('');
+  const [items, setItems] = useState<Entity[]>([]);
+  const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const doSearch = useCallback(async (searchQuery: string) => {
+    setLoading(true);
+    try {
+      setErr(null);
+      const url = searchQuery.trim()
+        ? `/api/hub/search?q=${encodeURIComponent(searchQuery.trim())}&limit=30`
+        : `/api/hub/search?limit=30`;
+      const r = await fetch(url);
+      const t = await r.text();
+      if (!r.ok) throw new Error(t);
+      const j = JSON.parse(t);
+      setItems(j?.items || []);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      setErr(message);
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      doSearch(query);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query, doSearch]);
 
   return (
     <div className="space-y-6">
@@ -45,11 +84,17 @@ export const SearchView: React.FC = () => {
         </div>
       </div>
 
+      {err && (
+        <div className="text-rose-400 text-sm">Search error: {err}</div>
+      )}
+
+      {loading && (
+        <div className="text-zinc-400 text-sm">Loading...</div>
+      )}
+
       {/* Results Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {MOCK_ENTITIES.filter((e) =>
-          e.name.toLowerCase().includes(query.toLowerCase())
-        ).map((entity) => (
+        {items.map((entity) => (
           <div
             key={entity.id}
             className="group bg-zinc-900 border border-white/5 rounded-xl p-5 hover:border-blue-500/30 transition-all hover:-translate-y-1 duration-300"
@@ -58,20 +103,20 @@ export const SearchView: React.FC = () => {
               <div className="w-10 h-10 rounded-lg bg-blue-900/20 border border-blue-500/20 flex items-center justify-center text-blue-400">
                 <Box size={20} />
               </div>
-              <Badge color="zinc">{entity.type}</Badge>
+              <Badge color="zinc">{entity.type || 'UNKNOWN'}</Badge>
             </div>
 
             <h3 className="text-lg font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">
               {entity.name}
             </h3>
             <p className="text-sm text-zinc-500 mb-4 line-clamp-2">
-              High-performance connector for {entity.capability} operations with
+              High-performance connector for {entity.capability || 'general'} operations with
               built-in safety checks.
             </p>
 
             <div className="flex items-center justify-between pt-4 border-t border-white/5">
               <div className="text-xs text-zinc-500 font-mono">
-                v{entity.version} • {entity.downloads} installs
+                v{entity.version || '0.0.0'} {entity.downloads ? `• ${entity.downloads} installs` : ''}
               </div>
               <Button variant="secondary" className="!py-1.5 !px-3 !text-[10px]">
                 <Download size={12} className="mr-1" /> Install
@@ -80,6 +125,12 @@ export const SearchView: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {!loading && items.length === 0 && !err && (
+        <div className="text-center text-zinc-500 py-12">
+          No entities found. Try a different search term.
+        </div>
+      )}
     </div>
   );
 };
