@@ -1,21 +1,24 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { hubBaseUrl, forwardHeaders, withAuthIfSet } from "@/lib/hubProxy";
 
-// Proxy: /api/hub/remotes  ->  ${HUB}/remotes
+// Proxy for /gateways/pending — the admin's view of MCP gateway
+// registrations that are awaiting approval / activation in MCP-Gateway.
 //
-// BUGFIX: previously called /catalog/remotes which doesn't exist on
-// matrix-hub (404). The correct endpoint per the Hub's openapi.json
-// is /remotes (top-level). Public on the production Hub; auth is
-// passed through if HUB_API_TOKEN is set but not required.
+// Routes:
+//   GET    /api/hub/gateways                    -> GET    /gateways/pending
+//   DELETE /api/hub/gateways?uid=<uid>          -> DELETE /gateways/pending/{uid}
+//   POST   /api/hub/gateways  (body { uids })   -> POST   /gateways/pending/delete
+//
+// Public on production matrix-hub today (GET returns 200 without auth);
+// auth header is forwarded if HUB_API_TOKEN is set.
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const base = hubBaseUrl();
-    const url = `${base}/remotes`;
     const auth = withAuthIfSet();
 
     if (req.method === "GET") {
-      const r = await fetch(url, {
+      const r = await fetch(`${base}/gateways/pending`, {
         method: "GET",
         headers: forwardHeaders(req, auth),
       });
@@ -27,12 +30,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.send(text);
     }
 
-    if (req.method === "POST") {
-      const body = typeof req.body === "string" ? req.body : JSON.stringify(req.body || {});
-      const r = await fetch(url, {
-        method: "POST",
-        headers: forwardHeaders(req, { "Content-Type": "application/json", ...auth }),
-        body,
+    if (req.method === "DELETE") {
+      const uid = typeof req.query.uid === "string" ? req.query.uid : "";
+      if (!uid) return res.status(400).json({ error: "missing_uid" });
+      const r = await fetch(`${base}/gateways/pending/${encodeURIComponent(uid)}`, {
+        method: "DELETE",
+        headers: forwardHeaders(req, auth),
       });
       const text = await r.text();
       res.status(r.status).setHeader(
@@ -42,10 +45,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.send(text);
     }
 
-    if (req.method === "DELETE") {
+    if (req.method === "POST") {
+      // Bulk-delete pending gateways: body { uids: ["...", "..."] }
       const body = typeof req.body === "string" ? req.body : JSON.stringify(req.body || {});
-      const r = await fetch(url, {
-        method: "DELETE",
+      const r = await fetch(`${base}/gateways/pending/delete`, {
+        method: "POST",
         headers: forwardHeaders(req, { "Content-Type": "application/json", ...auth }),
         body,
       });

@@ -1,24 +1,21 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { hubBaseUrl, forwardHeaders, withAuthIfSet } from "@/lib/hubProxy";
 
-// Proxy: POST /api/hub/ingest  ->  POST ${HUB}/ingest
+// Proxy: GET /api/hub/sync-status?job_id=<id>
+//          -> GET ${HUB}/remotes/sync/{job_id}
 //
-// BUGFIX: previously called /catalog/ingest which doesn't exist.
-// The correct endpoint is /ingest (top-level). Auth is opt-in via
-// HUB_API_TOKEN for private deployments.
+// Used by RemotesView (and the catalog dashboard) to poll the status
+// of a sync job kicked off by POST /remotes/sync.
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
+  if (req.method !== "GET") return res.status(405).json({ error: "method_not_allowed" });
+  const jobId = typeof req.query.job_id === "string" ? req.query.job_id : "";
+  if (!jobId) return res.status(400).json({ error: "missing_job_id" });
   try {
     const base = hubBaseUrl();
-    const body = typeof req.body === "string" ? req.body : JSON.stringify(req.body || {});
-    const r = await fetch(`${base}/ingest`, {
-      method: "POST",
-      headers: forwardHeaders(req, {
-        "Content-Type": "application/json",
-        ...withAuthIfSet(),
-      }),
-      body,
+    const r = await fetch(`${base}/remotes/sync/${encodeURIComponent(jobId)}`, {
+      method: "GET",
+      headers: forwardHeaders(req, withAuthIfSet()),
     });
     const text = await r.text();
     res.status(r.status).setHeader(
