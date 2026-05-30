@@ -6,8 +6,12 @@
 // No-op (refuses) if any user already exists — there is only ever one root.
 // Use this when you'd rather not expose the first-run web setup screen.
 
-import { Pool } from '@neondatabase/serverless';
+import { Pool, neonConfig } from '@neondatabase/serverless';
 import bcrypt from 'bcryptjs';
+import ws from 'ws';
+
+// Provide a WebSocket implementation for Node runtimes that lack a global one.
+neonConfig.webSocketConstructor = globalThis.WebSocket ?? ws;
 
 const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 if (!connectionString) {

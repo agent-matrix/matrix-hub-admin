@@ -9,7 +9,12 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { Pool } from '@neondatabase/serverless';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import ws from 'ws';
+
+// The Neon serverless driver talks to the DB over a WebSocket. Node < 21 has no
+// global WebSocket (e.g. the Node 20 GitHub Actions runner), so provide one.
+neonConfig.webSocketConstructor = globalThis.WebSocket ?? ws;
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const MIGRATIONS_DIR = join(__dirname, '..', 'migrations');

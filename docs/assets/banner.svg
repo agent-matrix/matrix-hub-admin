@@ -1,0 +1,59 @@
+<svg width="1280" height="340" viewBox="0 0 1280 340" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="MatrixHub Admin Console">
+  <defs>
+    <linearGradient id="bEdge" x1="0" y1="0" x2="200" y2="200" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6ee7b7"/>
+      <stop offset="0.5" stop-color="#34d399"/>
+      <stop offset="1" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="bWord" x1="430" y1="120" x2="430" y2="210" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ecfdf5"/>
+      <stop offset="1" stop-color="#a7f3d0"/>
+    </linearGradient>
+    <radialGradient id="bGlow" cx="0.18" cy="0.1" r="0.7">
+      <stop stop-color="#00ff88" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#00ff88" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="bGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#00ff88" stroke-opacity="0.05" stroke-width="1"/>
+    </pattern>
+    <linearGradient id="bTile" x1="80" y1="100" x2="220" y2="240" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#06241a"/>
+      <stop offset="1" stop-color="#02110b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- backdrop -->
+  <rect width="1280" height="340" rx="28" fill="#020403"/>
+  <rect width="1280" height="340" rx="28" fill="url(#bGrid)"/>
+  <rect width="1280" height="340" rx="28" fill="url(#bGlow)"/>
+  <rect x="0.5" y="0.5" width="1279" height="339" rx="27.5" fill="none" stroke="#34d399" stroke-opacity="0.18"/>
+
+  <!-- logo mark -->
+  <g transform="translate(96 96)">
+    <rect width="148" height="148" rx="36" fill="url(#bTile)" stroke="url(#bEdge)" stroke-width="3"/>
+    <g stroke="#34d399" stroke-width="3" stroke-linecap="round" opacity="0.85">
+      <line x1="74" y1="74" x2="74" y2="34"/>
+      <line x1="74" y1="74" x2="40" y2="96"/>
+      <line x1="74" y1="74" x2="108" y2="96"/>
+    </g>
+    <g fill="#6ee7b7">
+      <circle cx="74" cy="34" r="8.5"/>
+      <circle cx="40" cy="96" r="8.5"/>
+      <circle cx="108" cy="96" r="8.5"/>
+    </g>
+    <circle cx="74" cy="74" r="14" fill="#022c22" stroke="url(#bEdge)" stroke-width="3"/>
+    <circle cx="74" cy="74" r="5" fill="#6ee7b7"/>
+  </g>
+
+  <!-- wordmark -->
+  <text x="300" y="158" font-family="ui-sans-serif,Segoe UI,Helvetica,Arial,sans-serif" font-size="68" font-weight="800" letter-spacing="-2" fill="url(#bWord)">MatrixHub</text>
+  <text x="304" y="200" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="22" letter-spacing="8" fill="#34d399" opacity="0.85">ADMIN CONSOLE</text>
+  <text x="304" y="248" font-family="ui-sans-serif,Segoe UI,Helvetica,Arial,sans-serif" font-size="22" fill="#d1fae5" opacity="0.6">The operator console for the federated MCP ecosystem.</text>
+
+  <!-- status pill -->
+  <g transform="translate(1040 120)">
+    <rect width="150" height="40" rx="20" fill="#34d399" fill-opacity="0.1" stroke="#34d399" stroke-opacity="0.3"/>
+    <circle cx="26" cy="20" r="5" fill="#34d399"/>
+    <text x="44" y="26" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="14" letter-spacing="1" fill="#a7f3d0">SYSTEM ONLINE</text>
+  </g>
+</svg>
