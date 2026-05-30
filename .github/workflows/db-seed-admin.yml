@@ -1,0 +1,85 @@
+name: Seed root admin
+
+# Manually seed the single ROOT admin for a fresh on-prem instance.
+#
+# This is a no-op if any user already exists (there is only ever one root).
+# Runs migrations first so the tables are guaranteed to exist.
+#
+# Required repository secrets:
+#   DATABASE_URL    — Neon pooled connection string
+#   ADMIN_PASSWORD  — initial root password (min 8 chars; kept out of logs)
+#
+# The email / display name / workspace are provided as run inputs.
+
+on:
+  workflow_dispatch:
+    inputs:
+      admin_email:
+        description: 'Root admin email'
+        required: true
+        type: string
+      admin_name:
+        description: 'Root admin display name'
+        required: false
+        default: 'Root Administrator'
+        type: string
+      admin_tenant:
+        description: 'Workspace / tenant name'
+        required: false
+        default: 'MatrixHub'
+        type: string
+
+concurrency:
+  group: db-seed-admin
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    name: Seed root admin
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify required secrets
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          missing=0
+          [ -z "$DATABASE_URL" ] && { echo "::error::DATABASE_URL secret is not set."; missing=1; }
+          [ -z "$ADMIN_PASSWORD" ] && { echo "::error::ADMIN_PASSWORD secret is not set."; missing=1; }
+          [ "$missing" -eq 1 ] && exit 1
+          echo "Secrets present."
+
+      - name: Ensure tables exist
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npm run db:migrate
+
+      - name: Seed root admin (no-op if a user already exists)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          ADMIN_EMAIL: ${{ inputs.admin_email }}
+          ADMIN_NAME: ${{ inputs.admin_name }}
+          ADMIN_TENANT: ${{ inputs.admin_tenant }}
+        run: |
+          set +e
+          npm run db:seed-admin
+          code=$?
+          # Exit code 2 = a user already exists (treated as success/no-op).
+          if [ "$code" -eq 2 ]; then
+            echo "::notice::Root admin already exists — nothing to seed."
+            exit 0
+          fi
+          exit $code

@@ -1,74 +1,80 @@
 import React, { useState } from 'react';
-import { Button, Card } from '../ui';
+import { KeyRound } from 'lucide-react';
+import { PageHeader } from '../ui';
+import { EnvVarsManager } from './EnvVarsManager';
+
+function TokenRow({
+  label,
+  value,
+  visible,
+  setVisible,
+}: {
+  label: string;
+  value: string;
+  visible: boolean;
+  setVisible: (v: boolean) => void;
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-emerald-300/55">
+        {label}
+      </label>
+      <div className="flex gap-2 rounded-2xl border border-white/5 bg-black/35 p-2">
+        <div className="flex flex-1 items-center gap-2 px-2">
+          <KeyRound className="h-4 w-4 text-emerald-300" />
+          <input
+            readOnly
+            value={visible ? value : '••••••••••••••••••••••••'}
+            className="h-10 flex-1 bg-transparent font-mono text-sm text-emerald-50/62 outline-none"
+          />
+        </div>
+        <button
+          onClick={() => setVisible(!visible)}
+          className="rounded-xl border border-white/5 px-3 text-sm text-emerald-100 hover:bg-emerald-400/10"
+        >
+          {visible ? 'Hide' : 'Reveal'}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export const SettingsView: React.FC = () => {
   const [showAdminToken, setShowAdminToken] = useState(false);
   const [showGatewaySecret, setShowGatewaySecret] = useState(false);
 
   return (
-    <div className="max-w-2xl">
-      <h2 className="text-2xl font-bold text-white mb-6">Hub Configuration</h2>
-      <div className="space-y-6">
-        <Card title="Authentication Tokens">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
-                Admin API Token
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type={showAdminToken ? 'text' : 'password'}
-                  value="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
-                  disabled
-                  className="flex-1 bg-black border border-white/10 rounded-lg p-2 text-sm text-zinc-500"
-                />
-                <Button
-                  variant="secondary"
-                  onClick={() => setShowAdminToken(!showAdminToken)}
-                >
-                  {showAdminToken ? 'Hide' : 'Reveal'}
-                </Button>
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
-                Gateway Secret
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type={showGatewaySecret ? 'text' : 'password'}
-                  value="gw-xxxxxxxxxxxxxxxxxxxxxxxx"
-                  disabled
-                  className="flex-1 bg-black border border-white/10 rounded-lg p-2 text-sm text-zinc-500"
-                />
-                <Button
-                  variant="secondary"
-                  onClick={() => setShowGatewaySecret(!showGatewaySecret)}
-                >
-                  {showGatewaySecret ? 'Hide' : 'Reveal'}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </Card>
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Operator configuration"
+        title="Settings"
+        subtitle="Manage authentication secrets and environment variables for the hub."
+      />
 
-        <Card title="Environment Variables" className="bg-zinc-900/50">
-          <div className="space-y-3 font-mono text-xs">
-            <div className="flex justify-between border-b border-white/5 pb-2">
-              <span className="text-zinc-400">HUB_PUBLIC_URL</span>
-              <span className="text-white">https://hub.matrix.ai</span>
-            </div>
-            <div className="flex justify-between border-b border-white/5 pb-2">
-              <span className="text-zinc-400">GATEWAY_MODE</span>
-              <span className="text-white">HYBRID</span>
-            </div>
-            <div className="flex justify-between pb-2">
-              <span className="text-zinc-400">DB_CONNECTION</span>
-              <span className="text-emerald-400">CONNECTED</span>
-            </div>
-          </div>
-        </Card>
+      <div className="rounded-[2rem] border border-white/5 bg-white/[0.02] p-6 backdrop-blur">
+        <h2 className="text-2xl font-semibold tracking-tight text-emerald-50">
+          Authentication tokens
+        </h2>
+        <p className="mt-1 text-sm text-emerald-50/52">
+          Reveal only during secure operator sessions.
+        </p>
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <TokenRow
+            label="Admin API Token"
+            value="sk-matrix-admin-xxxxxxxxxxxx"
+            visible={showAdminToken}
+            setVisible={setShowAdminToken}
+          />
+          <TokenRow
+            label="Gateway Secret"
+            value="gw-matrix-router-xxxxxxxxxxx"
+            visible={showGatewaySecret}
+            setVisible={setShowGatewaySecret}
+          />
+        </div>
       </div>
+
+      <EnvVarsManager />
     </div>
   );
 };

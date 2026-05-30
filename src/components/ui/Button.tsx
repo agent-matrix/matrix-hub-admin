@@ -21,18 +21,18 @@ export const Button: React.FC<ButtonProps> = ({
   type = 'button',
 }) => {
   const baseStyle =
-    'flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed';
+    'inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed';
 
   const variants = {
     primary:
-      'bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-500/20',
+      'bg-emerald-400 text-black shadow-[0_0_24px_rgba(0,255,136,0.16)] hover:bg-emerald-300',
     secondary:
-      'bg-zinc-800 text-zinc-300 border border-white/10 hover:bg-zinc-700 hover:text-white',
+      'border border-white/10 bg-black/30 text-emerald-100 hover:bg-emerald-400/10',
     danger:
-      'bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20',
+      'border border-rose-300/20 bg-rose-400/10 text-rose-200 hover:bg-rose-400/20',
     success:
-      'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20',
-    ghost: 'bg-transparent text-zinc-400 hover:text-white hover:bg-white/5',
+      'border border-emerald-300/20 bg-emerald-400/10 text-emerald-200 hover:bg-emerald-400/20',
+    ghost: 'bg-transparent text-emerald-100/70 hover:bg-emerald-400/10 hover:text-emerald-100',
   };
 
   return (
@@ -42,7 +42,7 @@ export const Button: React.FC<ButtonProps> = ({
       disabled={disabled}
       className={`${baseStyle} ${variants[variant]} ${className}`}
     >
-      {Icon && <Icon size={14} />}
+      {Icon && <Icon size={16} />}
       {children}
     </button>
   );

@@ -2,25 +2,35 @@ import React from 'react';
 
 interface BadgeProps {
   children: React.ReactNode;
-  color?: 'blue' | 'emerald' | 'amber' | 'rose' | 'zinc';
+  color?: 'blue' | 'cyan' | 'emerald' | 'amber' | 'rose' | 'zinc';
 }
 
-export const Badge: React.FC<BadgeProps> = ({ children, color = 'blue' }) => {
-  const colors = {
-    blue: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    emerald: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    amber: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    rose: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-    zinc: 'bg-zinc-800 text-zinc-400 border-zinc-700',
+export const Badge: React.FC<BadgeProps> = ({ children, color = 'emerald' }) => {
+  const colors: Record<string, string> = {
+    blue: 'border-cyan-300/20 bg-cyan-400/10 text-cyan-200',
+    cyan: 'border-cyan-300/20 bg-cyan-400/10 text-cyan-200',
+    emerald: 'border-emerald-300/20 bg-emerald-400/10 text-emerald-200',
+    amber: 'border-amber-300/20 bg-amber-400/10 text-amber-200',
+    rose: 'border-rose-300/20 bg-rose-400/10 text-rose-200',
+    zinc: 'border-zinc-300/10 bg-zinc-400/10 text-zinc-300',
   };
 
   return (
     <span
-      className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${
-        colors[color] || colors.zinc
+      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium ${
+        colors[color] || colors.emerald
       }`}
     >
       {children}
     </span>
   );
 };
+
+/** Map a status string to a Badge color, matching the operator-console palette. */
+export function statusColor(status?: string): BadgeProps['color'] {
+  const v = String(status || '').toUpperCase();
+  if (['ACTIVE', 'SYNCED', 'VERIFIED', 'HEALTHY', 'OK', 'OPERATIONAL'].includes(v)) return 'emerald';
+  if (['SYNCING', 'REVIEW', 'PENDING'].includes(v)) return 'amber';
+  if (['ERROR', 'INACTIVE', 'UNHEALTHY', 'FAILED'].includes(v)) return 'rose';
+  return 'zinc';
+}
