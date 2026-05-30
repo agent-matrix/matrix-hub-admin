@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { RefreshCw, Plus, Trash2 } from 'lucide-react';
-import { Button, Card, Badge } from '../ui';
+import { RefreshCw, Plus, Trash2, Eye } from 'lucide-react';
+import { Button, Badge, PageHeader, statusColor } from '../ui';
 
 interface Remote {
   id?: string;
@@ -56,87 +56,84 @@ export const RemotesView: React.FC = () => {
     }
   };
 
-  const getStatusBadge = (status?: string) => {
-    const s = status?.toUpperCase();
-    if (s === 'SYNCED') return <Badge color="emerald">SYNCED</Badge>;
-    if (s === 'SYNCING') return <Badge color="blue">SYNCING</Badge>;
-    if (s === 'ERROR') return <Badge color="rose">ERROR</Badge>;
-    return <Badge color="zinc">{s || 'UNKNOWN'}</Badge>;
-  };
-
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-end">
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-1">Index Remotes</h2>
-          <p className="text-zinc-400 text-sm">
-            Manage upstream catalogs and synchronization schedules.
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <Button
-            variant="secondary"
-            icon={RefreshCw}
-            onClick={sync}
-            disabled={syncing}
-          >
-            {syncing ? 'Syncing...' : 'Sync All'}
-          </Button>
-          <Button variant="primary" icon={Plus}>
-            Add Remote
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Upstream federation"
+        title="Index remotes"
+        subtitle="Manage upstream catalogs and synchronization schedules."
+        actions={
+          <>
+            <Button variant="secondary" icon={RefreshCw} onClick={sync} disabled={syncing}>
+              {syncing ? 'Syncing…' : 'Sync all'}
+            </Button>
+            <Button variant="primary" icon={Plus}>
+              Add remote
+            </Button>
+          </>
+        }
+      />
 
-      {err && <div className="text-rose-400 text-sm">Remotes error: {err}</div>}
+      {err && <div className="text-sm text-rose-300">Remotes error: {err}</div>}
 
-      <Card className="p-0 overflow-hidden">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="bg-white/[0.02] border-b border-white/5 text-xs text-zinc-500 uppercase">
-              <th className="p-4 font-bold">Status</th>
-              <th className="p-4 font-bold">Name</th>
-              <th className="p-4 font-bold">Remote URL</th>
-              <th className="p-4 font-bold">Items</th>
-              <th className="p-4 font-bold">Last Sync</th>
-              <th className="p-4 font-bold text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5 text-sm">
-            {loading ? (
+      <div className="overflow-hidden rounded-[1.5rem] border border-white/[0.06] bg-white/[0.02] shadow-xl shadow-black/20 backdrop-blur">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] text-left text-sm">
+            <thead className="bg-emerald-400/[0.04] text-xs uppercase tracking-[0.16em] text-emerald-300/55">
               <tr>
-                <td colSpan={6} className="p-4 text-center text-zinc-500">
-                  Loading remotes...
-                </td>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Name</th>
+                <th className="px-4 py-3">Remote URL</th>
+                <th className="px-4 py-3">Items</th>
+                <th className="px-4 py-3">Last sync</th>
+                <th className="px-4 py-3 text-right">Actions</th>
               </tr>
-            ) : remotes.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="p-4 text-center text-zinc-500">
-                  No remotes configured.
-                </td>
-              </tr>
-            ) : (
-              remotes.map((remote, idx) => (
-                <tr
-                  key={remote.id || remote.url || idx}
-                  className="hover:bg-white/[0.02] transition-colors"
-                >
-                  <td className="p-4">{getStatusBadge(remote.status)}</td>
-                  <td className="p-4 font-medium text-zinc-300">{remote.name || '-'}</td>
-                  <td className="p-4 font-mono text-zinc-300">{remote.url}</td>
-                  <td className="p-4 text-white font-medium">{remote.items ?? '-'}</td>
-                  <td className="p-4 text-zinc-500">{remote.last_sync || '-'}</td>
-                  <td className="p-4 text-right">
-                    <button className="text-zinc-500 hover:text-rose-400 transition-colors p-2">
-                      <Trash2 size={16} />
-                    </button>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-6 text-center text-emerald-50/45">
+                    Loading remotes…
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </Card>
+              ) : remotes.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-6 text-center text-emerald-50/45">
+                    No remotes configured.
+                  </td>
+                </tr>
+              ) : (
+                remotes.map((remote, idx) => (
+                  <tr
+                    key={remote.id || remote.url || idx}
+                    className="bg-black/20 text-emerald-50/72 transition hover:bg-emerald-400/[0.035]"
+                  >
+                    <td className="px-4 py-4">
+                      <Badge color={statusColor(remote.status)}>
+                        {remote.status?.toUpperCase() || 'UNKNOWN'}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-4 font-medium text-emerald-50">{remote.name || '-'}</td>
+                    <td className="px-4 py-4 font-mono text-xs text-emerald-50/48">{remote.url}</td>
+                    <td className="px-4 py-4 text-emerald-50/58">{remote.items ?? '-'}</td>
+                    <td className="px-4 py-4 text-emerald-50/45">{remote.last_sync || '-'}</td>
+                    <td className="px-4 py-4 text-right">
+                      <div className="inline-flex gap-2">
+                        <button className="rounded-xl border border-white/[0.06] p-2 text-emerald-200 hover:bg-emerald-400/10">
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button className="rounded-xl border border-rose-300/12 p-2 text-rose-200 hover:bg-rose-400/10">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };

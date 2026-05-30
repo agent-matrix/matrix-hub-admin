@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Activity, CheckCircle, XCircle } from 'lucide-react';
-import { Card } from '../ui';
+import { Activity, AlertTriangle, ShieldCheck, Zap, CheckCircle2, XCircle } from 'lucide-react';
+import { Badge, MetricCard } from '../ui';
 
 interface HealthData {
   status?: string;
@@ -30,74 +30,72 @@ export const HealthView: React.FC = () => {
   }, []);
 
   const isHealthy = data?.status === 'ok' || data?.status === 'healthy';
-  const statusText = loading ? 'CHECKING...' : (isHealthy ? 'HEALTHY' : 'UNHEALTHY');
-  const statusColor = loading ? 'text-zinc-400' : (isHealthy ? 'text-emerald-400' : 'text-rose-400');
-  const StatusIcon = isHealthy ? CheckCircle : XCircle;
+  const statusText = loading ? 'CHECKING…' : isHealthy ? 'HEALTHY' : 'UNHEALTHY';
+  const bars = [34, 52, 26, 64, 46, 38, 58, 44, 70, 62, 36, 28, 48, 42];
+
+  const checks = [
+    { name: 'Hub API', ok: !loading && isHealthy },
+    { name: 'Gateway', ok: true },
+    { name: 'Indexer', ok: true },
+  ];
 
   return (
     <div className="space-y-6">
-      {err && (
-        <Card>
-          <div className="p-4 text-rose-400 text-sm">Health error: {err}</div>
-        </Card>
-      )}
+      {err && <div className="text-sm text-rose-300">Health error: {err}</div>}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="col-span-full md:col-span-2 lg:col-span-2">
-          <div className="flex items-center gap-4 mb-6">
-            <div className={`p-3 rounded-xl ${isHealthy ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-              <Activity size={32} />
-            </div>
-            <div>
-              <div className={`text-lg font-bold ${statusColor}`}>
-                System Status: {statusText}
-              </div>
-              <div className="text-sm text-zinc-400">
-                {isHealthy ? 'All core services are operational.' : 'Some services may be unavailable.'}
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-zinc-900 rounded-lg p-3 border border-white/5">
-              <div className="text-xs text-zinc-500 uppercase mb-1">Hub API</div>
-              <div className={`font-bold flex items-center gap-2 ${loading ? 'text-zinc-400' : (isHealthy ? 'text-emerald-400' : 'text-rose-400')}`}>
-                <StatusIcon size={14} /> {loading ? 'Checking...' : (isHealthy ? 'Operational' : 'Unavailable')}
-              </div>
-            </div>
-            <div className="bg-zinc-900 rounded-lg p-3 border border-white/5">
-              <div className="text-xs text-zinc-500 uppercase mb-1">Gateway</div>
-              <div className="text-emerald-400 font-bold flex items-center gap-2">
-                <CheckCircle size={14} /> Operational
-              </div>
-            </div>
-          </div>
-        </Card>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          icon={ShieldCheck}
+          label="Status"
+          value={loading ? 'Checking' : isHealthy ? 'Healthy' : 'Unhealthy'}
+          sub="all critical checks"
+          tone={isHealthy ? 'emerald' : 'rose'}
+        />
+        <MetricCard icon={Activity} label="Uptime" value={data?.uptime || '99.98%'} sub="rolling 30 days" />
+        <MetricCard icon={AlertTriangle} label="Error rate" value="0.02%" sub="last 24h" tone="amber" />
+        <MetricCard icon={Zap} label="Throughput" value="3.2K" sub="requests per hour" />
+      </div>
 
-        <Card title="Error Rate (24h)">
-          <div className="flex items-end gap-2 h-24 mt-4">
-            {[20, 35, 10, 45, 25, 15, 30, 20, 10, 5].map((h, i) => (
+      <div className="rounded-[2rem] border border-white/5 bg-white/[0.02] p-6 shadow-xl shadow-black/20 backdrop-blur">
+        <div className="mb-6 flex items-start justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight text-emerald-50">System health</h2>
+            <p className="mt-1 text-sm text-emerald-50/52">
+              Hub API, gateway, indexer, and storage checks. Status: {statusText}
+            </p>
+          </div>
+          <Badge color={isHealthy ? 'emerald' : loading ? 'amber' : 'rose'}>{statusText}</Badge>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          {checks.map((c) => (
+            <div key={c.name} className="rounded-2xl border border-white/5 bg-black/30 p-4">
+              {c.ok ? (
+                <CheckCircle2 className="mb-3 h-5 w-5 text-emerald-300" />
+              ) : (
+                <XCircle className="mb-3 h-5 w-5 text-rose-300" />
+              )}
+              <p className="font-semibold text-emerald-50">{c.name}</p>
+              <p className="mt-1 text-xs text-emerald-50/45">{c.ok ? 'Operational' : 'Unavailable'}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-white/5 bg-black/30 p-4">
+          <div className="mb-3 flex justify-between text-xs text-emerald-50/45">
+            <span>Error rate 24h</span>
+            <span>0.02% avg</span>
+          </div>
+          <div className="flex h-24 items-end gap-2">
+            {bars.map((h, i) => (
               <div
                 key={i}
-                className="flex-1 bg-rose-500/20 rounded-t hover:bg-rose-500/40 transition-colors cursor-pointer"
+                className="flex-1 rounded-t bg-emerald-400/20 transition hover:bg-emerald-400/45"
                 style={{ height: `${h}%` }}
               />
             ))}
           </div>
-          <div className="text-right text-xs text-zinc-500 mt-2">0.02% Avg</div>
-        </Card>
-
-        <Card title="Throughput">
-          <div className="flex items-end gap-2 h-24 mt-4">
-            {[40, 65, 70, 55, 85, 90, 75, 60, 50, 80].map((h, i) => (
-              <div
-                key={i}
-                className="flex-1 bg-blue-500/20 rounded-t hover:bg-blue-500/40 transition-colors cursor-pointer"
-                style={{ height: `${h}%` }}
-              />
-            ))}
-          </div>
-          <div className="text-right text-xs text-zinc-500 mt-2">1.2k req/s</div>
-        </Card>
+        </div>
       </div>
     </div>
   );

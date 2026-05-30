@@ -3,9 +3,10 @@
 @tailwind utilities;
 
 :root {
-  --background: 0 0% 0%;
-  --foreground: 240 10% 96%;
-  --border: 240 3.7% 15.9%;
+  /* MatrixHub operator console — emerald / near-black */
+  --background: 150 60% 1%;
+  --foreground: 150 30% 96%;
+  --border: 150 25% 20%;
 }
 
 * {
@@ -21,8 +22,8 @@ body {
 }
 
 body {
-  color: rgb(var(--foreground));
-  background: rgb(var(--background));
+  color: rgb(0 255 200 / 0.92);
+  background: #020403;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
@@ -41,12 +42,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(16, 185, 129, 0.2);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(16, 185, 129, 0.4);
 }
 
 /* Animation utilities */
@@ -72,6 +73,69 @@ body {
 
 .animate-in {
   animation: fade-in 0.5s ease-out, slide-in-from-bottom 0.5s ease-out;
+}
+
+/* Matrix rain — pure CSS, no runtime animation library */
+@keyframes matrix-fall {
+  0% {
+    transform: translateY(-60%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(160vh);
+    opacity: 0;
+  }
+}
+
+.matrix-column {
+  position: absolute;
+  top: -45%;
+  writing-mode: vertical-rl;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 0.9rem;
+  color: rgba(0, 255, 136, 0.35);
+  white-space: nowrap;
+  animation-name: matrix-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  user-select: none;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.pulse-dot {
+  animation: pulse-dot 1.8s ease-in-out infinite;
+}
+
+/* Dropdown / popover entrance (user menu) */
+@keyframes menu-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-menu-rise {
+  animation: menu-rise 0.16s ease-out;
 }
 
 /* Line clamp utility */
