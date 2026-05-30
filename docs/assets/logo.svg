@@ -1,0 +1,35 @@
+<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="MatrixHub logo">
+  <defs>
+    <linearGradient id="mhEdge" x1="0" y1="0" x2="160" y2="160" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6ee7b7"/>
+      <stop offset="0.5" stop-color="#34d399"/>
+      <stop offset="1" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="mhFill" x1="20" y1="20" x2="140" y2="140" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#06241a"/>
+      <stop offset="1" stop-color="#02110b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- tile -->
+  <rect x="10" y="10" width="140" height="140" rx="34" fill="url(#mhFill)" stroke="url(#mhEdge)" stroke-width="3"/>
+  <rect x="10" y="10" width="140" height="140" rx="34" fill="#34d399" opacity="0.05"/>
+
+  <!-- federated hub: edges -->
+  <g stroke="#34d399" stroke-width="3" stroke-linecap="round" opacity="0.85">
+    <line x1="80" y1="80" x2="80" y2="38"/>
+    <line x1="80" y1="80" x2="44" y2="102"/>
+    <line x1="80" y1="80" x2="116" y2="102"/>
+  </g>
+
+  <!-- outer nodes -->
+  <g fill="#6ee7b7">
+    <circle cx="80" cy="38" r="9"/>
+    <circle cx="44" cy="102" r="9"/>
+    <circle cx="116" cy="102" r="9"/>
+  </g>
+
+  <!-- central hub node -->
+  <circle cx="80" cy="80" r="15" fill="#022c22" stroke="url(#mhEdge)" stroke-width="3"/>
+  <circle cx="80" cy="80" r="5.5" fill="#6ee7b7"/>
+</svg>

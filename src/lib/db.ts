@@ -1,4 +1,19 @@
-import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from '@neondatabase/serverless';
+import {
+  Pool,
+  neonConfig,
+  type PoolClient,
+  type QueryResult,
+  type QueryResultRow,
+} from '@neondatabase/serverless';
+import ws from 'ws';
+
+// The Neon serverless Pool uses a WebSocket for sessions/transactions. Provide
+// a constructor for Node runtimes without a global WebSocket (Node < 21). Run
+// simple (non-transactional) queries over HTTP fetch where possible.
+if (!neonConfig.webSocketConstructor) {
+  neonConfig.webSocketConstructor = (globalThis as { WebSocket?: unknown }).WebSocket ?? ws;
+}
+neonConfig.poolQueryViaFetch = true;
 
 /**
  * Neon Postgres connection pool (singleton across hot reloads / serverless
